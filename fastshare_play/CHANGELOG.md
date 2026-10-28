@@ -1,3 +1,8 @@
+# 2.1.2
+
+Version the dashboard card resource with the app release so Home Assistant
+loads the current card after updates instead of reusing an old browser cache.
+
 # 2.1.1
 
 Style the cinema navigation as a prominent square lime action button and keep

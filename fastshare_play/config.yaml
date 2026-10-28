@@ -1,6 +1,6 @@
 name: FastShare Play
 slug: fastshare_play
-version: "2.1.1"
+version: "2.1.2"
 description: FastShare downloads, email queue, MQTT and a movie library with NOVA resume
 url: https://github.com/Jirkas-prog/fastshare-play
 arch:
