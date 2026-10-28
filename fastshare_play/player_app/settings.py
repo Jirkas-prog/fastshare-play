@@ -81,6 +81,8 @@ def supervisor(method, path, data=None, timeout=20):
 
 
 def configure(settings, patch):
+    if hasattr(settings, 'configure_shared'):
+        return settings.configure_shared(patch)
     proposed = settings.save(patch, dry_run=True)
     current = settings.get()
     restart = False

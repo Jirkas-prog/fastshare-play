@@ -19,3 +19,6 @@ licenses and copyright notices in /usr/share/doc inside the resulting image.
 This source repository does not redistribute FFmpeg binaries or link their code
 into the Python application. See https://ffmpeg.org/legal.html and
 https://sources.debian.org/src/ffmpeg/ for licensing and source packages.
+
+The download engine, authenticated local web and dashboard card originate in
+WorkFlow FastShare by Jirkas-prog, integrated and modified for FastShare Play 2.1.

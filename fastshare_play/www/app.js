@@ -163,7 +163,7 @@ $('#filters').querySelectorAll('select').forEach(select=>select.onchange=()=>{pa
 $('#clearFilters').onclick=()=>{['query','genre','year','collection','show','root'].forEach(id=>$('#'+id).value='');view='all';$('#views [data-view="all"]').click();};
 $('#previous').onclick=()=>{page--;action(loadLibrary);}; $('#next').onclick=()=>{page++;action(loadLibrary);};
 $('#refresh').onclick=()=>action(async()=>{$('#hero').dataset.filled='';if(config.admin)await api('api/admin/scan',{});await loadLibrary();});
-async function initialize(){config=await api('api/config');strings=config.language==='cs'?await api('cs.json'):{};translate();$('#settingsButton').hidden=!config.admin;$('#version').textContent='FastShare Play '+config.version;await loadLibrary();}
+async function initialize(){config=await api('api/config');strings=config.language==='cs'?await api('cs.json'):{};translate();$('#settingsButton').hidden=!config.admin;$('#controlLink').hidden=!config.controls;$('#version').textContent='FastShare Play '+config.version;await loadLibrary();}
 action(initialize);
 setInterval(()=>{if(!document.hidden&&!playing&&!$('dialog[open]'))action(loadLibrary);},15000);
 

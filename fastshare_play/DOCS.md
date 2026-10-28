@@ -1,18 +1,22 @@
 # FastShare Play
 
-A separate Home Assistant app for your local film collection. Three real frames
+A complete Home Assistant app for FastShare downloads and your film collection. Three real frames
 from each movie, a sharp navy-and-lime library, saved playback position and NOVA
 resume compatibility. No API keys, metadata accounts or cloud lookup required.
 
-The existing WorkFlow FastShare downloader stays unchanged. Point both apps at
-the same media directory. Play can also index films obtained elsewhere.
+Version 2.1 includes the established WorkFlow FastShare download queue, email
+monitor, FastShare sign-in, MQTT diagnostics and dashboard card. Open Library &
+player for the enhanced cinema. Play can also index films obtained elsewhere.
+The original add-on is a separate installation and can be stopped after migration.
 
 ## Install
 
 1. Add `https://github.com/Jirkas-prog/fastshare-play` to Home Assistant's app
    store repositories, install **FastShare Play**, then start it.
 2. Open its web UI through Home Assistant and select media folders in Settings,
-   for example `/media/movies`. The app mounts `/media` and `/share` read-only.
+   for example `/media/movies`. The download engine can write to `/media` and
+   `/share`; the player never edits source movies or sidecars. The dashboard
+   installer writes its card assets to `/homeassistant/www/workflow-fastshare`.
 3. To open the player directly on your network, enable **Playback without
    sign-in** and select a free port (default **8111**). Save; the app restarts
    automatically when the port mapping changes. The separate player has no
@@ -23,6 +27,26 @@ record pointing that name to the Home Assistant host. It does not configure a
 DNS server, router, external access or certificates.
 
 English is the default; Czech is selectable in Settings.
+
+## Downloads and migration
+
+- Configure FastShare, IMAP email, destination, parallel limits and MQTT in the
+  main Settings page. Download order, priority slots and exclusive downloads
+  work as in WorkFlow FastShare. Resume the queue when ready; new installations
+  start paused with MQTT off to avoid duplicate workers during migration.
+- Language, media folders and playback port are shared between both interfaces.
+- To migrate an existing installation, stop both apps, back up their private
+  storage, then copy the old private storage into Play's `/data/downloader/`.
+  Keep Play's `/data/library.sqlite3`, `/data/previews/` and `/data/settings.json`.
+  Copy the complete closed SQLite database, including any WAL/SHM files.
+- Map Play container port `8096/tcp` to the old authenticated web host port and
+  `8098/tcp` to the old playback host port. Stop and disable automatic startup
+  of the original before starting the migrated service. Do not run both MQTT
+  publishers or download workers with the same configuration.
+- Existing MQTT entity IDs and topics remain stable. Existing dashboard cards
+  need their `addon` setting changed to the new installation slug.
+- Account sessions, passwords, local sign-in key, queue/history and email cursors
+  stay in private storage and never belong in this repository.
 
 ## Library and playback
 
@@ -50,9 +74,10 @@ English is the default; Czech is selectable in Settings.
   decodes the original file. There is **no live transcoding**: MP4/H.264/AAC is
   widely supported, but MKV/AVI, HEVC/DTS and embedded subtitles depend on the
   browser and device. Your existing Android/TV player remains useful for those.
-- The app has no delete, move, rename, download-queue or email endpoints. Its
-  anonymous player can browse/play and update only watch state and favorites.
-  Administration is restricted to Home Assistant Ingress's actual peer.
+- The anonymous listener exposes only the cinema and watch state/favorites.
+  It cannot reach settings, download actions, email or credentials. The full
+  interface uses Home Assistant Ingress or a separate authenticated LAN port.
+  Network and player administration require Home Assistant Ingress.
 
 ## NOVA attribution and scope
 
@@ -76,11 +101,11 @@ for real preview extraction. Install `fastshare_play/requirements.txt`, then:
 cd fastshare_play
 python -m unittest discover -s tests -v
 node --check www/app.js
-python -m player_app.app
+python -m player_app.service
 ```
 
 Local development serves administration only to loopback on port 8099. Media
-must be under the `PLAY_DATA` directory (default `.runtime`). In Home Assistant,
+must be under `PLAY_DATA/downloader` (default `.runtime/downloader`). In Home Assistant,
 only configured `/media` and `/share` paths are accepted. Tests cover public
 access restrictions, path confinement, range requests, sidecar parsing,
 persistence, stale sessions, replacement files, preview caching and real FFmpeg

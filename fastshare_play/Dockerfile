@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
     && pip install --no-cache-dir -r requirements.txt
 COPY player_app ./player_app
 COPY www ./www
+COPY fastshare_app ./fastshare_app
+COPY download_www ./download_www
 COPY LICENSE NOTICE ./
-EXPOSE 8099 8098
-CMD ["python", "-m", "player_app.app"]
+EXPOSE 8099 8098 8096
+CMD ["python", "-m", "player_app.service"]

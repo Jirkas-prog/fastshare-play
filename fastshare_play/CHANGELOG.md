@@ -1,3 +1,10 @@
+# 2.1.0
+
+Complete replacement for WorkFlow FastShare: download queue, email intake,
+FastShare account, MQTT diagnostics and dashboard widgets alongside the advanced
+cinema. Shared language/folders/playback settings, separate authenticated and
+anonymous listeners, and migration preserving existing account and queue data.
+
 # 2.0.2
 
 Keep the preview worker idle when every frame is already cached; show generation

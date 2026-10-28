@@ -6,7 +6,7 @@ import re
 import threading
 from urllib.parse import urlsplit
 
-from flask import Flask, Response, abort, jsonify, request, send_file, send_from_directory
+from flask import Flask, Response, abort, jsonify, redirect, request, send_file, send_from_directory
 from waitress import create_server
 from werkzeug.exceptions import HTTPException
 
@@ -29,8 +29,8 @@ def player_application(app):
     return player
 
 
-def create_app(directory=None, start=True):
-    settings = Settings(directory or os.environ.get('PLAY_DATA', '.runtime'))
+def create_app(directory=None, start=True, settings=None, local=None):
+    settings = settings or Settings(directory or os.environ.get('PLAY_DATA', '.runtime'))
     catalog = Catalog(settings)
     metadata = Thumbnails(catalog)
     catalog.matcher = metadata
@@ -45,13 +45,19 @@ def create_app(directory=None, start=True):
         if public:
             if not settings.get()['lan_enabled']: abort(403)
             if request.path.startswith('/api/admin'): abort(403)
+        elif request.environ.get('fastshare.lan') and local:
+            if not local.settings.get()['lan_enabled']: abort(403)
+            if not local.authenticated():
+                if request.path == '/': return redirect('../')
+                abort(401)
+            if request.path.startswith('/api/admin'): abort(403)
         else:
             allowed = {'172.30.32.2'} if os.environ.get('SUPERVISOR_TOKEN') else {'127.0.0.1', '::1'}
             if request.remote_addr not in allowed: abort(403)
         if request.method not in ('GET', 'HEAD', 'OPTIONS'):
             if request.headers.get('X-Play-Request') != '1' or not request.is_json: abort(403)
             if not isinstance(request.get_json(silent=True), dict): raise ValueError('Expected a JSON object.')
-            if public and request.headers.get('Origin') and urlsplit(request.headers['Origin']).netloc != request.host: abort(403)
+            if (public or request.environ.get('fastshare.lan')) and request.headers.get('Origin') and urlsplit(request.headers['Origin']).netloc != request.host: abort(403)
 
     @app.after_request
     def headers(response):
@@ -81,7 +87,8 @@ def create_app(directory=None, start=True):
     @app.get('/api/config')
     def config():
         value = settings.get()
-        return jsonify(version=VERSION, language=value['language'], admin=not request.environ.get('play.public'),
+        return jsonify(version=VERSION, language=value['language'], admin=not request.environ.get('play.public') and not request.environ.get('fastshare.lan'),
+                       controls=bool(local) and not request.environ.get('play.public'),
                        cycle_previews=value['cycle_previews'], preview_error=metadata.error)
 
     @app.get('/api/library')
