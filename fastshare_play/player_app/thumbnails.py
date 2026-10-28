@@ -66,7 +66,8 @@ class Thumbnails:
                 temporary = target.with_suffix('.tmp.jpg')
                 self.run(['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-y',
                           '-protocol_whitelist', 'file', '-threads', '1', '-ss', str(round(times[index], 3)), '-i', str(path),
-                          '-map', '0:v:0', '-frames:v', '1', '-an', '-sn', '-dn', '-vf', 'scale=640:-2',
+                          '-map', '0:v:0', '-frames:v', '1', '-an', '-sn', '-dn',
+                          '-vf', 'scale=640:-2:out_range=full,format=yuvj420p', '-color_range', 'pc',
                           '-filter_threads', '1', '-threads', '1', '-q:v', '4', str(temporary)], 35)
                 if not temporary.is_file() or not 100 <= temporary.stat().st_size <= 2_000_000: raise ValueError('Invalid thumbnail.')
                 self.catalog.resolve(row['id'])  # Do not publish previews of a changed file.

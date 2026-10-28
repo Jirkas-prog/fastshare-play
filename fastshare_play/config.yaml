@@ -1,6 +1,6 @@
 name: FastShare Play
 slug: fastshare_play
-version: "2.0.0"
+version: "2.0.1"
 description: Local movie library, three automatic previews, NOVA resume and browser playback
 url: https://github.com/Jirkas-prog/fastshare-play
 arch:

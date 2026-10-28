@@ -141,12 +141,17 @@ class PlayerTest(unittest.TestCase):
         preview=self.catalog.query('SELECT * FROM previews')[0];times=json.loads(preview['times'])
         self.assertEqual(len(set(times)),3);self.assertTrue(all(200<t<800 for t in times))
         self.assertTrue(all('-threads' in call and '-protocol_whitelist' in call for call in calls[1:]))
+        self.assertTrue(all('scale=640:-2:out_range=full,format=yuvj420p' in call for call in calls[1:]))
         result=self.catalog.detail(item['id']);self.assertEqual(result['gallery_count'],3);self.assertEqual(result['duration'],1000)
         for index in range(3):
             with self.public.get('/api/library/'+item['id']+'/art/gallery?index='+str(index)) as response: self.assertEqual(response.status_code,200)
         self.assertEqual(self.public.get('/api/library/'+item['id']+'/art/gallery?index=3').status_code,404)
         video.write_bytes(b'new data');self.scan()
         self.assertEqual(self.catalog.detail(item['id'])['gallery_count'],0)
+        with patch.object(worker,'run',side_effect=subprocess.CalledProcessError(1,['ffprobe'])):
+            worker.generate(item)
+        self.assertEqual(self.catalog.detail(item['id'])['preview_status'],'failed')
+        self.assertEqual(self.catalog.listing({})['stats']['previews_failed'],1)
 
     def test_art_and_symlink_cannot_escape_media_root(self):
         video=self.video();outside=self.root/'private.jpg';outside.write_bytes(b'private')
@@ -160,7 +165,7 @@ class PlayerTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which('ffmpeg') and shutil.which('ffprobe'),'FFmpeg integration runs inside the add-on image')
     def test_real_ffmpeg_previews(self):
         path=self.media/'Generated.test.2026.mp4'
-        subprocess.run(['ffmpeg','-nostdin','-v','error','-f','lavfi','-i','testsrc2=size=320x180:rate=10','-t','8','-c:v','mpeg4',str(path)],check=True)
+        subprocess.run(['ffmpeg','-nostdin','-v','error','-f','lavfi','-i','testsrc2=size=320x180:rate=10','-t','8','-c:v','mpeg4','-color_range','tv',str(path)],check=True)
         item=self.scan()[0];self.app.extensions['metadata'].generate(item)
         result=self.catalog.detail(item['id']);self.assertEqual(result['gallery_count'],3)
         self.assertAlmostEqual(result['duration'],8,delta=.2)

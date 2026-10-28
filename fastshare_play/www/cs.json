@@ -1,6 +1,8 @@
 {
   "Your collection. Your cinema.": "Tvoje sbírka. Tvoje kino.",
   "Refresh": "Obnovit", "Settings": "Nastavení", "About": "O aplikaci", "Close": "Zavřít",
+  "Previews ready": "Hotové náhledy", "Previews unavailable": "Nedostupné náhledy",
+  "Preview extraction failed. The video may be incomplete or unsupported.": "Náhledy se nepodařilo vytvořit. Video může být neúplné nebo nepodporované.",
   "THE NEXT FRAME IS YOURS": "DALŠÍ ZÁBĚR JE TVŮJ", "Make time for a good film.": "Udělej si čas na dobrý film.",
   "One library. Every story. Pick a film and press play.": "Jedna knihovna. Všechny příběhy. Vyber film a stiskni přehrát.",
   "In your library": "V knihovně", "films & episodes": "filmů a epizod", "Continue watching": "Rozkoukáno",

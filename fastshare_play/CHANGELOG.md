@@ -1,3 +1,8 @@
+# 2.0.1
+
+Normalize extracted frames to full-range JPEG, including movies with explicit
+limited-range video flags. Show probed duration in movie details.
+
 # 2.0.0
 
 First separate FastShare Play release: local movie library, three cached video

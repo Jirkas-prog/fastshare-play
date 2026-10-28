@@ -181,7 +181,7 @@ class Catalog:
 
     def all_items(self):
         roots = {str(root) for root in self.roots()}
-        previews = {item['id']: item for item in self.query("SELECT * FROM previews WHERE status='ready'")} if self.matcher else {}
+        previews = {item['id']: item for item in self.query('SELECT * FROM previews')} if self.matcher else {}
         rows = self.query('''SELECT files.*, progress.position,progress.duration,progress.watched,progress.favorite,
                              progress.updated,progress.source AS progress_source FROM files LEFT JOIN progress USING(id) WHERE available=1''')
         items = []
@@ -191,7 +191,8 @@ class Catalog:
             poster, backdrop = meta.pop('poster', ''), meta.pop('backdrop', '')
             gallery = meta.pop('gallery', [])
             preview = previews.get(row['id'])
-            ready = bool(preview and preview['fingerprint'] == row['fingerprint'])
+            preview_status = preview['status'] if preview and preview['fingerprint'] == row['fingerprint'] else 'pending'
+            ready = preview_status == 'ready'
             local_poster = bool(poster and not urlsplit(poster).scheme)
             for key in ('position', 'lastplayed', 'external_stamp', 'watched'): meta.pop(key, None)
             item = {**meta, 'id': row['id'], 'filename': Path(row['path']).name, 'format': Path(row['path']).suffix[1:].upper(),
@@ -200,7 +201,8 @@ class Catalog:
                     'position': row['position'] or 0, 'duration': (preview['duration'] if ready else 0) or row['duration'] or meta.get('runtime', 0),
                     'watched': bool(row['watched']), 'favorite': bool(row['favorite']), 'lastplayed': row['updated'] or 0,
                     'progress_source': row['progress_source'], 'has_poster': local_poster or ready, 'has_backdrop': ready,
-                    'local_poster': local_poster, 'generated_previews': ready, 'gallery_count': 3 if ready else 0}
+                    'local_poster': local_poster, 'generated_previews': ready, 'preview_status': preview_status,
+                    'gallery_count': 3 if ready else 0}
             items.append(item)
         return items
 
@@ -232,7 +234,9 @@ class Catalog:
         page = min(page, max(0, (len(selected) - 1) // 36))
         continuing = sorted([item for item in all_items if item['position'] > 5 and not item['watched']], key=lambda item: -item['lastplayed'])[:12]
         return {'items': selected[page * 36:(page + 1) * 36], 'total': len(selected), 'page': page, 'page_size': 36,
-                'continue': continuing, 'stats': {'total': len(all_items), 'watching': len([i for i in all_items if i['position'] > 5 and not i['watched']]), 'watched': sum(i['watched'] for i in all_items)},
+                'continue': continuing, 'stats': {'total': len(all_items), 'watching': len([i for i in all_items if i['position'] > 5 and not i['watched']]), 'watched': sum(i['watched'] for i in all_items),
+                                                 'previews_ready': sum(i['generated_previews'] for i in all_items),
+                                                 'previews_failed': sum(i['preview_status'] == 'failed' for i in all_items)},
                 'facets': {'genres': sorted({genre for item in all_items for genre in item.get('genres', [])}),
                            'years': sorted({item['year'] for item in all_items if item.get('year')}, reverse=True),
                            'collections': sorted({item['collection'] for item in all_items if item.get('collection')}),
