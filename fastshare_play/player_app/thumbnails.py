@@ -50,8 +50,9 @@ class Thumbnails:
         targets = self.files(row)
         saved = self.catalog.query('SELECT * FROM previews WHERE id=?', (row['id'],))
         if saved and saved[0]['fingerprint'] == row['fingerprint']:
-            if saved[0]['status'] == 'ready' and all(file.is_file() for file in targets): return
-            if saved[0]['status'] == 'failed' and time.time() - saved[0]['updated'] < 86400: return
+            if saved[0]['status'] == 'ready' and all(file.is_file() for file in targets): return False
+            if saved[0]['status'] == 'failed' and time.time() - saved[0]['updated'] < 86400: return False
+        self.catalog.status['matching'] = True
         self.state(row['id'], row['fingerprint'], 'processing')
         temporary = None
         try:
@@ -79,21 +80,22 @@ class Thumbnails:
             self.state(row['id'], row['fingerprint'], 'failed')
         finally:
             if temporary: temporary.unlink(missing_ok=True)
+            self.catalog.status['matching'] = False
+        return True
 
     def auto_match(self):
         # Shared catalog worker hook: previews are generated sequentially after each scan.
         if not self.catalog.settings.get()['generate_previews'] or not self.lock.acquire(False): return
         self.error = ''
-        self.catalog.status['matching'] = True
         try:
             if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
                 self.error = 'FFmpeg is not installed. Preview generation is unavailable.'
                 return
             for item in self.catalog.all_items():
                 if self.catalog.stop.is_set(): break
-                try: self.generate(item)
+                try: attempted = self.generate(item)
                 except (FileNotFoundError, ValueError): continue
-                if self.catalog.stop.wait(.2): break
+                if attempted and self.catalog.stop.wait(.2): break
         finally:
             self.catalog.status['matching'] = False
             self.lock.release()

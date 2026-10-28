@@ -1,3 +1,8 @@
+# 2.0.2
+
+Keep the preview worker idle when every frame is already cached; show generation
+status only while a movie is actually being processed.
+
 # 2.0.1
 
 Normalize extracted frames to full-range JPEG, including movies with explicit

@@ -136,7 +136,8 @@ class PlayerTest(unittest.TestCase):
             Path(args[-1]).write_bytes(b'\xff\xd8\xff'+b'x'*150)
             return subprocess.CompletedProcess(args,0,b'')
         with patch.object(worker,'run',side_effect=fake_run):
-            worker.generate(item);worker.generate(item)
+            self.assertTrue(worker.generate(item));self.assertFalse(worker.generate(item))
+        self.assertFalse(self.catalog.status['matching'])
         self.assertEqual(len(calls),4)
         preview=self.catalog.query('SELECT * FROM previews')[0];times=json.loads(preview['times'])
         self.assertEqual(len(set(times)),3);self.assertTrue(all(200<t<800 for t in times))
