@@ -1,3 +1,8 @@
+# 2.1.1
+
+Style the cinema navigation as a prominent square lime action button and keep
+header controls readable and within the viewport on narrow screens.
+
 # 2.1.0
 
 Complete replacement for WorkFlow FastShare: download queue, email intake,
