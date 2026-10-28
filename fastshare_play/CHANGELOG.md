@@ -1,3 +1,9 @@
+# 2.1.3
+
+Add a quiet email countdown to every dashboard card size, driven by the actual
+mail polling schedule. Show checking, disabled and offline states without a
+misleading looping timer.
+
 # 2.1.2
 
 Version the dashboard card resource with the app release so Home Assistant

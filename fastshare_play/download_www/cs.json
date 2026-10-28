@@ -369,5 +369,9 @@
   "This browser could not play the video. Check the connection. Video and audio compatibility depends on the file's codecs.": "Prohlížeč video nepřehrál. Zkontrolujte připojení. Podpora obrazu a zvuku závisí na kodecích souboru.",
   "Some library folders are unavailable.": "Některé složky knihovny nejsou dostupné.",
   "Only part of the library is shown.": "Zobrazena je pouze část knihovny.",
-  "Use different ports for local web and playback-only access.": "Pro místní web a samostatný přehrávač použijte různé porty."
+  "Use different ports for local web and playback-only access.": "Pro místní web a samostatný přehrávač použijte různé porty.",
+  "Off": "Vyp.",
+  "Checking email…": "Kontroluji e-mail…",
+  "Waiting for the next email check": "Čekám na další kontrolu e-mailu",
+  "Next email check in {time}": "Další kontrola e-mailu za {time}"
 }

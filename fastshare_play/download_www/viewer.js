@@ -1,5 +1,5 @@
 import {setupPlayer} from './player.js?v=1.3.0';
-import {ready,setLanguage,localize,observe} from './translations.js?v=1.3.0';
+import {ready,setLanguage,localize,observe} from './translations.js?v=2.1.3';
 
 const status=document.querySelector('#library-status');
 async function api(path){

@@ -49,6 +49,7 @@ class Engine:
         self.lock = threading.RLock()
         self.active = {}
         self.priority = json.loads(self.store.cursor('priority_override') or 'null')
+        self.email_poll = {'checking': False, 'next_check_at': None, 'last_checked_at': None}
         self.health = {'fastshare': None, 'email': None, 'email_message': 'Email is not configured.',
                        'fastshare_message': 'Checking connection…', 'mqtt': False, 'mqtt_message': 'Connecting…'}
         self.pool = ThreadPoolExecutor(max_workers=8, thread_name_prefix='download')
@@ -124,6 +125,9 @@ class Engine:
         visible = live + waiting + [row for row in rows if row not in live and row not in waiting]
         with self.lock:
             priority = dict(self.priority) if self.priority else None
+            email_poll = dict(self.email_poll)
+        if not config['email_enabled']:
+            email_poll.update(checking=False, next_check_at=None)
         if priority:
             priority['name'] = next((row['name'] for row in rows if row['id'] == priority['job_id']), '')
         jobs = []
@@ -143,7 +147,8 @@ class Engine:
                 'paused': config['paused'], 'priority': priority,
                 'limit': 1 if priority and priority['mode'] == 'exclusive' else config['parallel_downloads'] if session else 1,
                 'account': {k: v for k, v in session.items() if k != 'token'},
-                'email_enabled': config['email_enabled'], 'jobs': jobs, 'total_jobs': len(rows)}
+                'email_enabled': config['email_enabled'], 'email_poll': email_poll,
+                'jobs': jobs, 'total_jobs': len(rows)}
 
     def scheduler(self):
         while not self.stop.is_set():
@@ -343,6 +348,8 @@ class Engine:
     def mail_loop(self):
         while not self.stop.is_set():
             config = self.settings.get()
+            with self.lock:
+                self.email_poll.update(checking=config['email_enabled'], next_check_at=None)
             if config['email_enabled']:
                 try:
                     count = self.poll_email(config)
@@ -351,6 +358,11 @@ class Engine:
                     self.health.update(email=False, email_message='Email sign-in or reading failed. Check the server, folder and app password.')
             else:
                 self.health.update(email=None, email_message='Email monitoring is disabled.')
+            with self.lock:
+                now = time.time()
+                self.email_poll.update(checking=False, next_check_at=now + config['email_interval'])
+                if config['email_enabled']:
+                    self.email_poll['last_checked_at'] = now
             self.stop.wait(config['email_interval'])
 
     def probe_loop(self):

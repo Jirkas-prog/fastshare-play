@@ -68,6 +68,38 @@ class AddonTests(unittest.TestCase):
         self.assertEqual(email_links(raw, 'other@example.org'), [])
         self.assertEqual(len(email_links(raw, 'sender@example.org')), 1)
 
+    def test_email_countdown_tracks_real_poll_and_retry_schedule(self):
+        for enabled, fails, interval in [(True, False, 60), (True, True, 120), (False, False, 60)]:
+            with self.subTest(enabled=enabled, fails=fails):
+                self.engine.stop.clear()
+                self.settings.save({'email_enabled': enabled, 'email_interval': interval})
+
+                def poll(config):
+                    state = self.engine.snapshot()['email_poll']
+                    self.assertTrue(state['checking'])
+                    self.assertIsNone(state['next_check_at'])
+                    if fails:
+                        raise OSError('Mailbox unavailable')
+                    return 0
+
+                def wait(seconds):
+                    self.assertEqual(seconds, interval)
+                    state = self.engine.snapshot()['email_poll']
+                    self.assertFalse(state['checking'])
+                    self.assertEqual(state['next_check_at'], 1000 + interval if enabled else None)
+                    if enabled:
+                        self.assertEqual(state['last_checked_at'], 1000)
+                        self.assertEqual(self.engine.health['email'], not fails)
+                    self.engine.stop.set()
+
+                with patch('fastshare_app.engine.time.time', return_value=1000), \
+                     patch.object(self.engine, 'poll_email', side_effect=poll) as check, \
+                     patch.object(self.engine.stop, 'wait', side_effect=wait):
+                    self.engine.mail_loop()
+                self.assertEqual(check.call_count, int(enabled))
+                self.settings.save({'email_enabled': False})
+                self.assertIsNone(self.engine.snapshot()['email_poll']['next_check_at'])
+
     def test_dedup_persistence_and_recovery(self):
         first = self.engine.add('https://fastshare.cloud/123/test.mp4')
         second = self.engine.add('https://data4.fastshare.cloud/download.php?id=123', 'email')
