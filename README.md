@@ -1,4 +1,12 @@
-# FastShare Play
+# FastShare Play — moved
+
+**FastShare Play is now maintained and distributed alongside WorkFlow FastShare in
+[Jirkas Home Assistant Add-ons](https://github.com/Jirkas-prog/home-assistant-addons/tree/main/fastshare_play).**
+Use `https://github.com/Jirkas-prog/home-assistant-addons` as the Home Assistant repository.
+This former standalone repository is retained for history and migration. New
+releases are published only in the shared repository. Existing installations
+require the [Play-to-Play migration procedure](https://github.com/Jirkas-prog/home-assistant-addons/tree/main/fastshare_play#moving-from-the-standalone-play-repository)
+to preserve private settings, queue and playback state when the installation ID changes.
 
 A complete Home Assistant app for FastShare downloads and your film collection. Three real frames
 from each movie, a sharp navy-and-lime library, saved playback position and NOVA
@@ -11,7 +19,7 @@ The original add-on is a separate installation and can be stopped after migratio
 
 ## Install
 
-1. Add `https://github.com/Jirkas-prog/fastshare-play` to Home Assistant's app
+1. Add `https://github.com/Jirkas-prog/home-assistant-addons` to Home Assistant's app
    store repositories, install **FastShare Play**, then start it.
 2. Open its web UI through Home Assistant and select media folders in Settings,
    for example `/media/movies`. The download engine can write to `/media` and
